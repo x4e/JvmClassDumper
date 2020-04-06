@@ -19,6 +19,12 @@ public class EntryPoint {
 			throw new RuntimeException("Bad num args");
 		}
 		
+		try {
+			Class.forName("sun.tools.attach.WindowsAttachProvider");
+		} catch (Throwable t) {
+			throw new IllegalStateException("Invalid class path", t);
+		}
+		
 		System.setProperty("sun.jvm.hotspot.runtime.VM.disableVersionCheck", "true");
 		vms = VirtualMachine.list();
 		
