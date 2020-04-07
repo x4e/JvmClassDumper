@@ -4,9 +4,13 @@ import sun.jvm.hotspot.oops.*;
 import sun.jvm.hotspot.runtime.BasicType;
 import sun.jvm.hotspot.runtime.VM;
 import sun.jvm.hotspot.tools.Tool;
+import sun.misc.Unsafe;
 
 import java.io.DataInputStream;
 import java.io.EOFException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author cookiedragon234 06/Apr/2020
@@ -29,17 +33,26 @@ public class MemoryDumperTool extends Tool {
 					
 					if (type == TypeArrayKlass.T_BYTE) {
 						int length = (int) typeArray.getLength();
+						
+						if (length < 4) return false;
+						
 						byte[] arr = new byte[length];
 						for (int index = 0; index < length; index++) {
 							long offset = BYTE_BASE_OFFSET + index * BYTE_SIZE;
 							arr[index] = typeArray.getHandle().getJByteAt(offset);
+							
+							if (index == 3) {
+								int magic = getMagic(arr);
+								if (magic != -889275714) {
+									//System.out.println("----bad magic " + magic);
+									return false;
+								} else {
+									System.out.println("found good magic");
+								}
+							}
 						}
 						
-						if (matchesMagic(arr)) {
-							System.out.println("Found class arr " + length);
-						} else {
-							System.out.println("Invalid class ");
-						}
+						System.out.println("Found class " + getClassName(arr) + " with length " + length);
 					}
 				}
 				return false;
@@ -47,23 +60,29 @@ public class MemoryDumperTool extends Tool {
 		});
 	}
 	
-	public boolean matchesMagic(byte[] arr) {
-		if (arr.length < 4) return false;
-		
+	private int getMagic(byte[] arr) {
+		if (arr.length < 4) return 0;
 		int ch1 = arr[0];
 		int ch2 = arr[1];
 		int ch3 = arr[2];
 		int ch4 = arr[3];
-		int magic = ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
-		
-		//return magic == -889275714;
-		
-		if (magic == -889275714) {
-			System.out.println("Found class arr " + arr.length);
-			return true;
-		} else {
-			System.out.println("Non magic " + magic + " length " + arr.length);
-			return false;
+		return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+	}
+	
+	private CustomCl customCl = new CustomCl();
+	
+	private String getClassName(byte[] bytes) {
+		try {
+			return customCl.define(bytes).getName();
+		} catch (Throwable t) {
+			t.printStackTrace();
+			return new CustomCl().define(bytes).getName();
 		}
+	}
+}
+
+class CustomCl extends ClassLoader {
+	public Class<?> define(byte[] bytes) {
+		return defineClass(bytes, 0, bytes.length);
 	}
 }

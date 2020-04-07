@@ -14,7 +14,9 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
-    compile fileTree(dir: "C:\\Program Files\\Java\\jdk1.8.0_241\\lib\\", include: "*.jar")
+	compile files("C:\\Program Files\\Java\\jdk1.8.0_241\\lib\\sa-jdi.jar", "C:\\Program Files\\Java\\jdk1.8.0_241\\lib\\tools.jar")
+
+    //compile fileTree(dir: "C:\\Program Files\\Java\\jdk1.8.0_241\\lib\\", include: "*.jar")
 }
 
 jar {
@@ -29,4 +31,5 @@ jar {
                 'Implementation-Version': rootProject.version
         )
     }
+	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }

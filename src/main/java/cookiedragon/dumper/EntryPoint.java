@@ -4,6 +4,8 @@ import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
 import cookiedragon.dumper.tools.ClassListTool;
 import cookiedragon.dumper.tools.DumperTool;
+import cookiedragon.dumper.tools.MemoryDumperTool;
+import sun.jvm.hotspot.tools.Tool;
 
 import java.util.List;
 
@@ -28,7 +30,9 @@ public class EntryPoint {
 		System.setProperty("sun.jvm.hotspot.runtime.VM.disableVersionCheck", "true");
 		vms = VirtualMachine.list();
 		
-		if (args[0].equals("list")) {
+		String arg0 = args[0];
+		
+		if (arg0.equals("list")) {
 			if (args[1].startsWith("vm")) {
 				vms.stream()
 					.map(VirtualMachineDescriptor::toString)
@@ -46,14 +50,21 @@ public class EntryPoint {
 			}
 		}
 		
-		if (args[0].equals("dump")) {
+		if (arg0.equals("dump") || arg0.equals("memorydump")) {
 			int id = Integer.parseInt(args[1]);
 			if (args.length == 3) {
 				classToDump = args[2];
 			}
 			VirtualMachineDescriptor vm = getVm(id);
 			
-			DumperTool agent = new DumperTool();
+			Tool agent;
+			if (arg0.equals("dump")) {
+				agent = new DumperTool();
+			} else if (arg0.equals("memorydump")) {
+				agent = new MemoryDumperTool();
+			} else {
+				throw new IllegalStateException(args[0]);
+			}
 			Utils.executeJavaAgent(agent, vm);
 			return;
 		}
