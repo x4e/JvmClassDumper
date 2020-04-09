@@ -4,13 +4,6 @@ import sun.jvm.hotspot.oops.*;
 import sun.jvm.hotspot.runtime.BasicType;
 import sun.jvm.hotspot.runtime.VM;
 import sun.jvm.hotspot.tools.Tool;
-import sun.misc.Unsafe;
-
-import java.io.DataInputStream;
-import java.io.EOFException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author cookiedragon234 06/Apr/2020
